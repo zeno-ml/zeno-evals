@@ -16,6 +16,15 @@ Pass this file to the `zeno-evals` command:
 zeno-evals /tmp/evallogs/my_eval_cache.jsonl
 ```
 
-### To-Dos
+### Example
+
+We include an example looking at the [MedMCQA](https://github.com/openai/evals/pull/141) dataset:
+
+```bash
+zeno-evals example.jsonl
+```
+
+### Todo
 
 - [ ] Support model-graded evaluations
+- [ ] Support custom evaluation templates (e.g. BLEU for translation)
