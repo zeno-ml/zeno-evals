@@ -18,10 +18,10 @@ zeno-evals /tmp/evallogs/my_eval_cache.jsonl
 
 ### Example
 
-We include an example looking at the [MedMCQA](https://github.com/openai/evals/pull/141) dataset:
+We include an example looking at the [MedMCQA](https://github.com/openai/evals/pull/141) dataset (Thanks to @SinanAkkoyun):
 
 ```bash
-zeno-evals example.jsonl
+zeno-evals ./example_medicine/example.jsonl --functions_file=./example_medicine/distill.py
 ```
 
 ### Todo
