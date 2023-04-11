@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "zeno-evals-test",
+      "type": "python",
+      "request": "launch",
+      "module": "zeno_evals.main",
+      "justMyCode": false,
+      "args": ["example/example.jsonl"]
+    }
+  ]
+}

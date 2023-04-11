@@ -13,6 +13,9 @@ zenoml = "^0.4.5"
 pandas = "^1.5.3"
 
 
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
