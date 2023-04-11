@@ -2,8 +2,6 @@ from contextlib import contextmanager
 from inspect import getmembers, isfunction
 import json
 import os
-import re
-import string
 import sys
 from importlib import util
 
@@ -43,17 +41,6 @@ def parse_testing_file(test_file):
             ):
                 functions.append(func)
     return functions
-
-
-def normalize(s: str) -> str:
-    """Lower text and remove punctuation, articles and extra whitespace."""
-    s = s.split("\n")[0]
-    s = s.lower()
-    exclude = set(string.punctuation)
-    s = "".join(char for char in s if char not in exclude)
-    s = re.sub(r"\b(a|an|the)\b", " ", s)
-    s = " ".join(s.split())
-    return s
 
 
 def get_metric_function(metric_name):
@@ -99,6 +86,7 @@ def read_results_file(data):
             if "type" in d and d["type"] == "sampling"
         ]
     )
+
     match_df = pd.DataFrame(
         [
             {
@@ -141,11 +129,14 @@ def main(
     """Visualize a result from OpenAI evals using Zeno.
 
     Args:
-            results_file (path): Result .jsonl file from OpenAI evals. Often stored in the /tmp/evallogs/ directory.
+            results_file (path): Result .jsonl file from OpenAI evals.
+            Often stored in the /tmp/evallogs/ directory.
 
-            second_results_file (path): Second result .jsonl file from OpenAI evals for comparison. Often stored in the /tmp/evallogs/ directory.
+            second_results_file (path): Second result .jsonl file from OpenAI
+            evals for comparison. Often stored in the /tmp/evallogs/ directory.
 
-            functions_file (path, optional): Path to a Python file containing additional Zeno processing functions. Defaults to None.
+            functions_file (path, optional): Path to a Python file containing
+            additional Zeno processing functions. Defaults to None.
     """
 
     if not os.path.exists(results_file):
