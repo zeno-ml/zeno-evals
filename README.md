@@ -22,6 +22,21 @@ zeno-evals /tmp/evallogs/my_eval_cache.jsonl
 
 ### Example
 
+Single example looking at US tort law questions:
+
 ```bash
-zeno-evals ./example/example.jsonl
+zeno-evals ./examples/example.jsonl
+```
+
+And an example of comparison between two models:
+
+```bash
+zeno-evals ./examples/crossword-turbo.jsonl ./examples/crossword-turbo-0301.jsonl
+```
+
+And lastly, we can pass additional [Zeno functions](https://zenoml.com/docs/api) to provide more context to the results:
+
+```bash
+pip install wordfreq
+zeno-evals ./examples/crossword-turbo.jsonl ./examples/crossword-turbo-0301.jsonl --functions_file ./examples/crossword_fns.py
 ```

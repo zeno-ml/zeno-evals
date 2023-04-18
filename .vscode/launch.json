@@ -5,9 +5,12 @@
       "name": "zeno-evals-test",
       "type": "python",
       "request": "launch",
-      "module": "zeno_evals.main",
+      "module": "zeno_evals",
       "justMyCode": false,
-      "args": ["example/example.jsonl"]
+      "args": [
+        "./example/crossword-turbo.jsonl",
+        "./example/crossword-turbo-0301.jsonl"
+      ]
     }
   ]
 }
