@@ -31,12 +31,12 @@ zeno-evals ./examples/example.jsonl
 And an example of comparison between two models:
 
 ```bash
-zeno-evals ./examples/crossword-turbo.jsonl ./examples/crossword-turbo-0301.jsonl
+zeno-evals ./examples/crossword-turbo.jsonl --second-results-file ./examples/crossword-turbo-0301.jsonl
 ```
 
 And lastly, we can pass additional [Zeno functions](https://zenoml.com/docs/api) to provide more context to the results:
 
 ```bash
 pip install wordfreq
-zeno-evals ./examples/crossword-turbo.jsonl ./examples/crossword-turbo-0301.jsonl --functions_file ./examples/crossword_fns.py
+zeno-evals ./examples/crossword-turbo.jsonl --second-results-file ./examples/crossword-turbo-0301.jsonl --functions_file ./examples/crossword_fns.py
 ```
