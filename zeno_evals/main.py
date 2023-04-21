@@ -76,7 +76,7 @@ def model_fn(name):
     model_df = dfs[name]
 
     def mod(df, ops):
-        return ModelReturn(model_output=model_df["sampled"].loc[df.index].tolist())
+        return ModelReturn(model_output=model_df["sampled"].loc[df["id"]].tolist())
 
     return mod
 
@@ -85,7 +85,7 @@ def model_fn(name):
 def correct(df, ops: ZenoOptions):
     model_name = [i for i in dfs.keys() if i in ops.output_column]
     model_df = dfs[model_name[0]]
-    return DistillReturn(distill_output=model_df["correct"].loc[df.index])
+    return DistillReturn(distill_output=model_df["correct"].loc[df["id"]])
 
 
 @metric
@@ -96,6 +96,7 @@ def avg_correct(df, ops: ZenoOptions):
 
 
 def read_results_file(data):
+    data_res = [d for d in data if "event_id" in d]
     sampling_df = pd.DataFrame(
         [
             {
@@ -103,7 +104,7 @@ def read_results_file(data):
                 "prompt": d["data"]["prompt"],
                 "sampled": d["data"]["sampled"][0],
             }
-            for d in data[2:]
+            for d in data_res
             if "type" in d and d["type"] == "sampling"
         ]
     )
@@ -115,19 +116,19 @@ def read_results_file(data):
                 "correct": d["data"]["correct"],
                 "expected": d["data"]["expected"],
             }
-            for d in data[2:]
+            for d in data_res
             if "type" in d and d["type"] == "match"
         ]
     )
 
     metric_names = []
-    for d in data[2:]:
+    for d in data_res:
         if "type" in d and d["type"] == "metrics":
             metric_names = list(d["data"].keys())
             break
 
     metrics = []
-    for d in data[2:]:
+    for d in data_res:
         if "type" in d and d["type"] == "metrics":
             met_obj = {"id": d["sample_id"]}
             for name in metric_names:
