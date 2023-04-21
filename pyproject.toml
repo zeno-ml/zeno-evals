@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "zeno-evals"
-version = "0.1.7"
+version = "0.1.8"
 description = "Visualize OpenAI evals with Zeno"
 authors = ["Alex Cabrera <alex.cabrera@gmail.com>"]
 readme = "README.md"

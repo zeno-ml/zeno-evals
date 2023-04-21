@@ -1,5 +1,3 @@
-from .main import (
-    generate_zeno_config,
-)
+from .main import ZenoEvals
 
-__all__ = ["generate_zeno_config"]
+__all__ = ["ZenoEvals"]

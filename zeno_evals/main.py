@@ -4,9 +4,11 @@ import sys
 from contextlib import contextmanager
 from importlib import util
 from inspect import getmembers, isfunction
+from typing import Dict
 
 import fire
 import pandas as pd
+from pandas import DataFrame
 from zeno import (
     DistillReturn,
     ModelReturn,
@@ -18,7 +20,93 @@ from zeno import (
 )
 from zeno.api import MetricReturn, ZenoOptions
 
-dfs = {}
+
+class ZenoEvals:
+    def __init__(
+        self,
+        results_file: str,
+        second_results_file: str = None,
+        functions_file: str = None,
+    ):
+        self.dfs = {}
+        self.results_file = results_file
+        self.second_results_file = second_results_file
+        self.functions_file = functions_file
+
+    def generate_zeno_config(self) -> ZenoParameters:
+        if not os.path.exists(self.results_file):
+            print("ERROR: file '{}' does not exist.".format(self.results_file))
+            sys.exit(1)
+
+        data = []
+        with open(self.results_file) as f:
+            for line in f:
+                data.append(json.loads(line))
+
+        df, metric_names = read_results_file(data)
+        self.dfs[get_model_name(data)] = df
+
+        models = [get_model_name(data)]
+        if self.second_results_file is not None:
+            data2 = []
+            with open(self.second_results_file) as f:
+                for line in f:
+                    data2.append(json.loads(line))
+
+            models.append(get_model_name(data2))
+            df2, _ = read_results_file(data2)
+            self.dfs[get_model_name(data2)] = df2
+
+        functions = [get_model_fn(self.dfs)]
+        if self.functions_file is not None:
+            functions = functions + parse_testing_file(self.functions_file)
+
+        base_df_columns = ["id", "prompt"]
+
+        for m in metric_names:
+            functions = functions + [get_metric_function(m)]
+
+        if "expected" in df.columns:
+            functions = functions + [get_correct_fn(self.dfs), avg_correct]
+            base_df_columns = base_df_columns + ["expected"]
+
+        zeno_config = ZenoParameters(
+            metadata=df[base_df_columns],
+            models=models,
+            functions=functions,
+            view="openai-chat",
+            data_column="prompt",
+            id_column="id",
+            cache_path="./.zeno_cache_" + data[0]["spec"]["eval_name"],
+            port=8080,
+            batch_size=100,
+            samples=5,
+        )
+
+        if "expected" in df.columns:
+            zeno_config.label_column = "expected"
+
+        return zeno_config
+
+
+def get_model_fn(dfs: Dict[str, DataFrame]):
+    def model_fn(name):
+        model_df = dfs[name]
+
+        def mod(df, ops: ZenoOptions):
+            return ModelReturn(model_output=model_df["sampled"].loc[df["id"]].tolist())
+
+        return mod
+
+    return model(model_fn)
+
+
+def get_correct_fn(dfs: Dict[str, DataFrame]):
+    def correct(df, ops: ZenoOptions):
+        mod = [mod for mod in list(dfs.keys()) if mod in ops.output_column][0]
+        return DistillReturn(distill_output=dfs[mod]["correct"].loc[df["id"]])
+
+    return distill(correct)
 
 
 @contextmanager
@@ -69,23 +157,6 @@ def get_metric_function(metric_name):
     metric_function.__name__ = metric_name
 
     return metric(metric_function)
-
-
-@model
-def model_fn(name):
-    model_df = dfs[name]
-
-    def mod(df, ops):
-        return ModelReturn(model_output=model_df["sampled"].loc[df["id"]].tolist())
-
-    return mod
-
-
-@distill
-def correct(df, ops: ZenoOptions):
-    model_name = [i for i in dfs.keys() if i in ops.output_column]
-    model_df = dfs[model_name[0]]
-    return DistillReturn(distill_output=model_df["correct"].loc[df["id"]])
 
 
 @metric
@@ -151,64 +222,6 @@ def get_model_name(data):
     return name.replace(".", "_")
 
 
-def generate_zeno_config(
-    results_file: str, second_results_file: str = None, functions_file: str = None
-) -> ZenoParameters:
-    if not os.path.exists(results_file):
-        print("ERROR: file '{}' does not exist.".format(results_file))
-        sys.exit(1)
-
-    data = []
-    with open(results_file) as f:
-        for line in f:
-            data.append(json.loads(line))
-
-    df, metric_names = read_results_file(data)
-    dfs[get_model_name(data)] = df
-
-    models = [get_model_name(data)]
-    if second_results_file is not None:
-        data2 = []
-        with open(second_results_file) as f:
-            for line in f:
-                data2.append(json.loads(line))
-
-        models.append(get_model_name(data2))
-        df2, _ = read_results_file(data2)
-        dfs[get_model_name(data2)] = df2
-
-    functions = [model_fn]
-    if functions_file is not None:
-        functions = functions + parse_testing_file(functions_file)
-
-    base_df_columns = ["id", "prompt"]
-
-    for m in metric_names:
-        functions = functions + [get_metric_function(m)]
-
-    if "expected" in df.columns:
-        functions = functions + [correct, avg_correct]
-        base_df_columns = base_df_columns + ["expected"]
-
-    zeno_config = ZenoParameters(
-        metadata=df[base_df_columns],
-        models=models,
-        functions=functions,
-        view="openai-chat",
-        data_column="prompt",
-        id_column="id",
-        cache_path="./.zeno_cache_" + data[0]["spec"]["base_eval"],
-        port=8080,
-        batch_size=100,
-        samples=5,
-    )
-
-    if "expected" in df.columns:
-        zeno_config.label_column = "expected"
-
-    return zeno_config
-
-
 def main(
     results_file: str, second_results_file: str = None, functions_file: str = None
 ):
@@ -225,7 +238,8 @@ def main(
             additional Zeno processing functions. Defaults to None.
     """
 
-    config = generate_zeno_config(results_file, second_results_file, functions_file)
+    eval = ZenoEvals(results_file, second_results_file, functions_file)
+    config = eval.generate_zeno_config()
     zeno(config)
 
 

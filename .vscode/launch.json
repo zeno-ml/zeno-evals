@@ -8,8 +8,9 @@
       "module": "zeno_evals",
       "justMyCode": false,
       "args": [
-        "./example/crossword-turbo.jsonl",
-        "./example/crossword-turbo-0301.jsonl"
+        "/Users/acabrera/dev-research/22-zeno/zeno-evals-hub/evals/us-tort-law/us-tort-law-turbo.jsonl"
+        // "/Users/acabrera/dev-research/22-zeno/zeno-evals-hub/evals/crossword/crossword-turbo.jsonl",
+        // "/Users/acabrera/dev-research/22-zeno/zeno-evals-hub/evals/crossword/crossword-4.jsonl"
       ]
     }
   ]
